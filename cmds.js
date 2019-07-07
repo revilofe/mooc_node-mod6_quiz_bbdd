@@ -243,6 +243,7 @@ exports.testCmd = (rl, id) => {
  */
 exports.playCmd = rl => {
     let score = 0;
+  /*
     const playOne = () => {
         let quiz = quizzes.pop();
         rl.question(colorize(`${quiz.question}: `, 'red'), answer => {
@@ -278,8 +279,45 @@ exports.playCmd = rl => {
         quizzes.sort(() => (Math.random() - 0.5));
         playOne();
     }
+*/
 
+    const playOne = (quizzes) => {
+        let quiz = quizzes.pop();
 
+        makeQuestion(rl, `${quiz.question}: `)
+            .then(answer => {
+                if (answer.trim().toUpperCase() === quiz.answer.trim().toUpperCase()) {
+                    score++;
+                    log(`CORRECTO - Lleva ${score} aciertos.`, "green");
+                    if (quizzes.length > 0)
+                        playOne(quizzes);
+                    else{
+                        log(`No hay nada más que preguntar.`);
+                        log(`Fin del examen. Aciertos:`);
+                        biglog(`${score}`, "blue");
+                        rl.prompt();
+                    }
+                } else {
+                    log("INCORRECTO.");
+                    log(`Fin del examen. Aciertos:`);
+                    biglog(`${score}`, "blue");
+                    rl.prompt();
+                }
+            });
+    };
+
+    models.quiz.findAll()
+        .then( quizzes => {
+            if (quizzes.length === 0) {
+                throw new Error(`No hay preguntas.`);
+            } else {
+                quizzes.sort(() => (Math.random() - 0.5));
+                playOne(quizzes);
+            }
+        })
+        .catch(error => {
+            errorlog(error.message);
+        });
 
 };
 
